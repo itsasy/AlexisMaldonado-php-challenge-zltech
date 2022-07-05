@@ -2,12 +2,17 @@
 
 namespace App;
 
-
 class Call
 {
-	
-	function __construct()
-	{
-		# code...
-	}
+    private $phoneNumber;
+
+    function __construct($phoneNumber)
+    {
+        $this->phoneNumber = $phoneNumber;
+    }
+
+    public function IsValidCall()
+    {
+        return !empty($this->phoneNumber);
+    }
 }

@@ -5,28 +5,47 @@ namespace App;
 use App\Interfaces\CarrierInterface;
 use App\Services\ContactService;
 
-
 class Mobile
 {
+    protected $provider;
+    protected $secondaryProvider;
+    protected $activePrimaryProvider = true;
 
-	protected $provider;
-	
-	function __construct(CarrierInterface $provider)
-	{
-		$this->provider = $provider;
-	}
+    function __construct(CarrierInterface $provider, CarrierInterface $secondaryProvider = null)
+    {
+        $this->provider = $provider;
+        $this->secondaryProvider = $secondaryProvider;
+    }
 
+    protected function getProviderCurrent()
+    {
+        return $this->activePrimaryProvider ? $this->provider : $this->secondaryProvider;
+    }
 
-	public function makeCallByName($name = '')
-	{
-		if( empty($name) ) return;
+    public function statusProviderPrimary(bool $active)
+    {
+        $this->activePrimaryProvider = $active;
+    }
 
-		$contact = ContactService::findByName($name);
+    public function makeCallByName($name = '')
+    {
+        if (empty($name)) return;
 
-		$this->provider->dialContact($contact);
+        $contact = ContactService::findByName($name);
 
-		return $this->provider->makeCall();
-	}
+        $this->provider->dialContact($contact);
 
+        return $this->provider->makeCall();
+    }
 
+    public function makeSMS($name = '', $from)
+    {
+        if (empty($name)) return;
+
+        $contact = ContactService::findByName($name);
+
+        if (!ContactService::validateNumber($from)) return;
+        $this->getProviderCurrent()->dialContact($contact);
+        return $this->getProviderCurrent()->makeSMS($from);
+    }
 }
